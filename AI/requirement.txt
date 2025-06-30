@@ -1,0 +1,15 @@
+torch>=1.8
+numpy
+pandas
+blobfile
+nibabel
+opencv-python
+scikit-image
+matplotlib
+batchgenerators
+visdom
+torchsummary
+python-dotenv==1.0.1
+Flask==3.0.3
+flask-cors
+torchvision
