@@ -1,0 +1,19 @@
+dataset
+# Ignore contents of specific folders
+shared/data/*
+shared/logs/*
+shared/result/*
+shared/models/**/sampled/
+shared/models/**/model/
+
+# Allow the folders themselves to remain in version control
+!shared/data/.gitkeep
+!shared/logs/.gitkeep
+!shared/result/.gitkeep
+
+# Ignore compiled Python files
+__pycache__/
+
+# Ignore other specific files
+Key_fix.txt
+RUNNING.txt
