@@ -1,0 +1,51 @@
+services:
+  ai:
+    build:
+      context: ./AI
+      dockerfile: Dockerfile
+    container_name: ai-service
+    environment:
+      - DOCKER_ENV=1
+      - ENV=${ENV}
+      - APP_DATA_PATH=${APP_DATA_PATH}
+      - APP_LOG_PATH=${APP_LOG_PATH}
+      - APP_MODEL_PATH=${APP_MODEL_PATH}
+      - AI_HOST=${AI_HOST}
+      - AI_PORT=${AI_PORT}
+    ports:
+      - "${AI_PORT}:${AI_PORT}"
+    volumes:
+      - ./shared:/shared
+    networks:
+      - final_code_network
+    restart: always
+
+  web:
+    build:
+      context: ./Web
+      dockerfile: Dockerfile
+    container_name: web-service
+    environment:
+      - DOCKER_ENV=1 # This prevents .env from being loaded in main.py
+      - ENV=${ENV}
+      - FLASK_APP=main.py
+      - APP_DATA_PATH=${APP_DATA_PATH}
+      - APP_LOG_PATH=${APP_LOG_PATH}
+      - APP_RESULT_PATH=${APP_RESULT_PATH}
+      - APP_MODEL_PATH=${APP_MODEL_PATH}
+      - AI_HOST_URL=http://ai-service:${AI_PORT}
+      - WEB_HOST=${WEB_HOST}
+      - WEB_PORT=${WEB_PORT}
+    ports:
+      - "${WEB_PORT}:${WEB_PORT}"
+    volumes:
+      - ./shared:/shared
+    networks:
+      - final_code_network
+    depends_on:
+      - ai
+    restart: always
+
+networks:
+  final_code_network:
+    driver: bridge
