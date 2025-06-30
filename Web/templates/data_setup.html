@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Data Setup - Potatoes Medical Image Segmenter</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/main.css') }}"
+    />
+    <link
+      rel="icon"
+      type="image/x-icon"
+      href="{{ url_for('static', filename='images/favicon.ico') }}"
+    />
+  </head>
+  <body>
+    <!-- Navigation Bar -->
+    <div class="header-tab">
+      <div class="title-container">
+        <span class="title">Potatoes Medical Image Segmenter</span>
+      </div>
+      <div class="nav-links">
+        <a href="{{ url_for('main.index') }}" class="header-link">Home</a>
+        <a href="{{ url_for('main.datasetup') }}" class="header-link"
+          >Setup Dataset</a
+        >
+        <a href="{{ url_for('main.img_upload') }}" class="header-link"
+          >Segment Image</a
+        >
+        <a href="{{ url_for('main.folder_upload') }}" class="header-link"
+          >Segment Folder</a
+        >
+      </div>
+    </div>
+
+    <!-- Background Image -->
+    <div class="background"></div>
+
+    <!-- Main Form Section -->
+    <div class="container">
+      <h2>Setup Dataset</h2>
+      <div class="container translucent-container">
+        <!-- Flash message section for feedback -->
+        {% with messages = get_flashed_messages() %} {% if messages %}
+        <div class="flash-messages">
+          {% for message in messages %}
+          <p>{{ message }}</p>
+          {% endfor %}
+        </div>
+        {% endif %} {% endwith %}
+
+        <!-- Dataset setup form -->
+        <form
+          id="dataSetupForm"
+          action="{{ url_for('main.datasetup') }}"
+          method="POST"
+          enctype="multipart/form-data"
+          class="form-container"
+          onsubmit="showProcessingModal(event)"
+        >
+          <!-- Hidden field for replace_existing -->
+          <input
+            type="hidden"
+            id="replace_existing"
+            name="replace_existing"
+            value="false"
+          />
+
+          <div class="form-row">
+            <label for="task_type">Task Type:</label>
+            <select
+              id="task_type"
+              name="taskType"
+              required
+              onchange="checkOtherTaskType()"
+              class="input-fullwidth"
+            >
+              <option value="Skin_Lesion">Skin Lesion</option>
+              <option value="Multi-Organ_Segmentation">
+                Multi-Organ Segmentation
+              </option>
+              <option value="Other">Other</option>
+            </select>
+          </div>
+
+          <div class="form-row" id="specifyTaskRow">
+            <input
+              type="text"
+              id="custom_task_type"
+              name="custom_task_type"
+              placeholder="Specify Task Type"
+              style="display: none"
+              class="input-fullwidth"
+            />
+          </div>
+
+          <div class="form-row">
+            <label for="dataset_name">Dataset Name:</label>
+            <input
+              type="text"
+              id="dataset_name"
+              name="datasetName"
+              required
+              class="input-fullwidth"
+              onfocusout="formatDatasetName()"
+            />
+          </div>
+
+          <div class="form-row">
+            <label for="test_images">Test Images Folder:</label>
+            <span class="form-hint"
+              >Format: {dataset_name}_{image_id}.jpg or .png</span
+            >
+            <input
+              type="file"
+              id="test_images"
+              name="testImages"
+              webkitdirectory
+              directory
+              required
+              onchange="validateTestImages()"
+            />
+            <span id="testImagesCount" class="status-message"></span>
+          </div>
+
+          <div style="height: 10px"></div>
+          <!-- Adjust height as needed -->
+
+          <div class="form-row">
+            <label for="ground_truth">Ground Truth Images Folder:</label>
+            <span class="form-hint"
+              >Format: {dataset_name}_{image_id}_Segmentation.jpg or .png</span
+            >
+            <input
+              type="file"
+              id="ground_truth"
+              name="groundTruthImages"
+              webkitdirectory
+              directory
+              required
+              onchange="validateGroundTruthImages()"
+            />
+            <span id="groundTruthImagesCount" class="status-message"></span>
+          </div>
+
+          <button type="submit" id="submitBtn" class="predict-button" disabled>
+            Submit
+          </button>
+          <button type="reset" class="clear-button-form" onclick="resetForm()">
+            Clear Form
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- Processing Modal -->
+    <div id="processingModal" class="modal">
+      <div class="modal-content">
+        <span class="loader"></span>
+        <p id="modalMessage">
+          Processing...<br />Please wait while we update the dataset.
+        </p>
+        <button onclick="closeModal()" class="close-modal-button">Close</button>
+      </div>
+    </div>
+
+    <!-- Confirmation Modal for Dataset Replacement -->
+    <div id="confirmationModal" class="modal">
+      <div class="modal-content">
+        <p id="confirmationMessage">
+          Dataset already exists. Would you like to replace it?
+        </p>
+        <button onclick="confirmReplacement()" class="confirm-button">
+          Yes
+        </button>
+        <button onclick="closeModal()" class="close-modal-button">No</button>
+      </div>
+    </div>
+
+    <script>
+      function checkOtherTaskType() {
+        const taskTypeSelect = document.getElementById("task_type");
+        const customTaskType = document.getElementById("custom_task_type");
+        customTaskType.style.display =
+          taskTypeSelect.value === "Other" ? "block" : "none";
+      }
+
+      function formatDatasetName() {
+        const datasetNameInput = document.getElementById("dataset_name");
+        datasetNameInput.value = datasetNameInput.value.trim().toUpperCase();
+      }
+
+      function validateTestImages() {
+        const datasetName = document
+          .getElementById("dataset_name")
+          .value.trim()
+          .toLowerCase();
+        const testImages = document.getElementById("test_images").files;
+        const count = testImages.length;
+        const isValid = Array.from(testImages).every((file) =>
+          new RegExp(`^${datasetName}_[0-9]+\\.(jpg|png)$`, "i").test(file.name)
+        );
+        const statusMessage = document.getElementById("testImagesCount");
+
+        if (count === 0) {
+          statusMessage.innerText = "No images in the folder.";
+          statusMessage.style.color = "red";
+        } else if (!isValid) {
+          statusMessage.innerText = `Invalid format. Must be {dataset_name}_{image_id}.png or .jpg`;
+          statusMessage.style.color = "red";
+        } else {
+          statusMessage.innerText = `${count} image(s) selected`;
+          statusMessage.style.color = "red";
+        }
+
+        validateGroundTruthImages();
+        checkFormValidity();
+      }
+
+      function validateGroundTruthImages() {
+        const datasetName = document
+          .getElementById("dataset_name")
+          .value.trim()
+          .toLowerCase();
+        const groundTruthImages = document.getElementById("ground_truth").files;
+        const testImages = document.getElementById("test_images").files;
+        const count = groundTruthImages.length;
+        const isValid = Array.from(groundTruthImages).every((file) =>
+          new RegExp(
+            `^${datasetName}_[0-9]+_Segmentation\\.(jpg|png)$`,
+            "i"
+          ).test(file.name)
+        );
+        const groundTruthStatus = document.getElementById(
+          "groundTruthImagesCount"
+        );
+        const testImagesStatus = document.getElementById("testImagesCount");
+
+        if (count === 0) {
+          groundTruthStatus.innerText = "No images in the folder.";
+          groundTruthStatus.style.color = "red";
+        } else if (!isValid) {
+          groundTruthStatus.innerText = `Invalid format. Must be {dataset_name}_{image_id}_Segmentation.png or .jpg`;
+          groundTruthStatus.style.color = "red";
+        } else if (count !== testImages.length) {
+          groundTruthStatus.innerText = `Image count mismatch with Test Images (${testImages.length} vs ${count}).`;
+          groundTruthStatus.style.color = "red";
+          testImagesStatus.style.color = "red";
+        } else {
+          groundTruthStatus.innerText = `${count} image(s) selected`;
+          groundTruthStatus.style.color = "green";
+          testImagesStatus.style.color = "green";
+        }
+
+        checkFormValidity();
+      }
+
+      function checkFormValidity() {
+        const isTestImagesValid =
+          document.getElementById("testImagesCount").style.color === "green";
+        const isGroundTruthValid =
+          document.getElementById("groundTruthImagesCount").style.color ===
+          "green";
+        document.getElementById("submitBtn").disabled = !(
+          isTestImagesValid && isGroundTruthValid
+        );
+      }
+
+      function showProcessingModal(event) {
+        event.preventDefault();
+        document.getElementById("processingModal").style.display = "flex";
+
+        const formData = new FormData(document.getElementById("dataSetupForm"));
+        formData.set(
+          "replace_existing",
+          document.getElementById("replace_existing").value
+        );
+
+        fetch("{{ url_for('main.datasetup') }}", {
+          method: "POST",
+          body: formData,
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.replacePrompt) {
+              closeModal();
+              document.getElementById("confirmationModal").style.display =
+                "flex";
+            } else if (data.success) {
+              document.getElementById(
+                "modalMessage"
+              ).innerText = `Dataset added successfully! Unique ID: ${data.unique_id}`;
+              setTimeout(() => window.location.reload(true), 1000);
+            } else {
+              document.getElementById(
+                "modalMessage"
+              ).innerText = `Error: ${data.error}`;
+            }
+          })
+          .catch(() => {
+            document.getElementById("modalMessage").innerText =
+              "An error occurred during submission.";
+          });
+      }
+
+      function confirmReplacement() {
+        // Set replace_existing to true and resubmit
+        document.getElementById("replace_existing").value = "true";
+        document.getElementById("confirmationModal").style.display = "none";
+
+        // Trigger the actual form submission event instead of calling the function recursively
+        document
+          .getElementById("dataSetupForm")
+          .dispatchEvent(new Event("submit", { cancelable: true }));
+      }
+
+      function closeModal() {
+        document.getElementById("processingModal").style.display = "none";
+        document.getElementById("confirmationModal").style.display = "none";
+        const modalMessage = document.getElementById("modalMessage").innerText;
+        if (
+          modalMessage.includes("Dataset added successfully") ||
+          modalMessage.includes("Error:")
+        ) {
+          resetForm();
+        }
+      }
+
+      function resetForm() {
+        document.getElementById("dataSetupForm").reset();
+        document.getElementById("replace_existing").value = "false";
+        document.getElementById("testImagesCount").innerText = "";
+        document.getElementById("groundTruthImagesCount").innerText = "";
+        document.getElementById("submitBtn").disabled = true;
+        document.getElementById("custom_task_type").style.display = "none";
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Success</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/main.css') }}"
+    />
+  </head>
+  <body>
+    <!-- Navigation Bar -->
+    <div class="header-tab">
+      <div class="title-container">
+        <span class="title">Potatoes Medical Image Segmenter</span>
+      </div>
+      <div class="nav-links">
+        <a href="{{ url_for('main.index') }}" class="header-link">Home</a>
+        <a href="{{ url_for('main.datasetup') }}" class="header-link"
+          >Setup Dataset</a
+        >
+        <a href="{{ url_for('main.img_upload') }}" class="header-link"
+          >Segment Image</a
+        >
+        <a href="{{ url_for('main.folder_upload') }}" class="header-link"
+          >Segment Folder</a
+        >
+      </div>
+    </div>
+
+    <!-- Background -->
+    <div class="background"></div>
+
+    <!-- Translucent Container -->
+    <div class="translucent-container-new">
+      <div class="preview-container-new">
+        <div class="image-columns-new">
+          <div class="column-new"><h3>Test Image</h3></div>
+          <div class="column-new"><h3>Ground Truth</h3></div>
+          <div class="column-new"><h3>Sampled Image</h3></div>
+        </div>
+
+        {% for images in matched_images %}
+        <div class="image-row-new">
+          <div class="column-new">
+            <img
+              src="{{ images.test_image }}"
+              class="image-preview-new"
+              alt="Test Image"
+              title="{{ images.test_image.split('/')[-1] }}"
+            />
+          </div>
+          <div class="column-new">
+            <img
+              src="{{ images.ground_truth_image }}"
+              class="image-preview-new"
+              alt="Ground Truth Image"
+              title="{{ images.ground_truth_image.split('/')[-1] }}"
+            />
+          </div>
+          <div class="column-new">
+            <img
+              src="{{ images.sampled_image }}"
+              class="image-preview-new"
+              alt="Sampled Image"
+              title="{{ images.sampled_image.split('/')[-1] }}"
+            />
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+
+      <div class="score-section-new">
+        <div class="scores-new">
+          <div><strong>F1 Score:</strong> {{ scores.F1Score }}</div>
+          <div><strong>Specificity:</strong> {{ scores.Specificity }}</div>
+          <div><strong>Sensitivity:</strong> {{ scores.Sensitivity }}</div>
+          <div><strong>Accuracy:</strong> {{ scores.Accuracy }}</div>
+          <div><strong>Dice Score:</strong> {{ scores.DiceScore }}</div>
+          <div><strong>IoU:</strong> {{ scores.IoU }}</div>
+        </div>
+        <button
+        onclick="location.href='{{ url_for("main.download_pdf", result_id=result_id) }}';"
+        class="download-button-new"
+        >
+            Download Report
+        </button>
+    
+      </div>
+    </div>
+  </body>
+</html>

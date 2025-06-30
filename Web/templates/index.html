@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Potatoes Medical Image Segmenter</title>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/main.css') }}"
+    />
+    <link
+      rel="icon"
+      type="image/x-icon"
+      href="{{ url_for('static', filename='images/favicon.ico') }}"
+    />
+  </head>
+  <body>
+    <!-- Navigation Bar -->
+    <div class="header-tab">
+      <div class="title-container">
+        <span class="title">Potatoes Medical Image Segmenter</span>
+      </div>
+      <div class="nav-links">
+        <a href="{{ url_for('main.index') }}" class="header-link">Home</a>
+        <a href="{{ url_for('main.datasetup') }}" class="header-link"
+          >Setup Dataset</a
+        >
+        <a href="{{ url_for('main.img_upload') }}" class="header-link"
+          >Segment Image</a
+        >
+        <a href="{{ url_for('main.folder_upload') }}" class="header-link"
+          >Segment Folder</a
+        >
+      </div>
+    </div>
+
+    <!-- Background Image -->
+    <div class="background"></div>
+
+    <!-- Content Section -->
+    <div class="container">
+      {% if no_data %}
+      <!-- Display message if no data is available -->
+      <p class="no-data-message">
+        No datasets available. Please set up a new dataset to get started.
+      </p>
+      {% else %}
+      <!-- Data Table -->
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Task Type</th>
+            <th>Dataset</th>
+            <th>Path</th>
+            <th>Number of Images</th>
+            <th>Size of Images</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for record in records %}
+          <tr>
+            <td>{{ record["Task Type"] }}</td>
+            <td>{{ record["Dataset Name"] }}</td>
+            <td>{{ record["Path"] }}</td>
+            <td>{{ record["Number of Test Images"] }}</td>
+            <td>{{ record["Size of Test Images"] }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% endif %}
+    </div>
+  </body>
+</html>
