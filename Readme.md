@@ -4,6 +4,13 @@
 
 The Potatoes Medical Image Segmenter aims to segment medical images to identify and generate masks surrounding skin lesions. It leverages advanced deep learning architectures for precise image segmentation.
 
+![Screenshot 1](screenshots/1.png)
+![Screenshot 2](screenshots/2.png)
+![Screenshot 3](screenshots/3.png)
+![Screenshot 4](screenshots/4.png)
+![Screenshot 5](screenshots/5.png)
+![Screenshot 6](screenshots/6.png)
+
 ---
 
 ## **Project Architecture**
